@@ -1,8 +1,8 @@
 package teststore
 
 import (
-	"errors"
 	"github.com/pvelp/http-rest-api-template/internal/app/model"
+	"github.com/pvelp/http-rest-api-template/internal/app/store"
 )
 
 type UserRepository struct {
@@ -27,7 +27,7 @@ func (r *UserRepository) Create(u *model.User) error {
 func (r *UserRepository) FindByCardId(cardId int) (*model.User, error) {
 	u, ok := r.users[cardId]
 	if !ok {
-		return nil, errors.New("Not found")
+		return nil, store.ErrRecordNotFound
 	}
 	return u, nil
 

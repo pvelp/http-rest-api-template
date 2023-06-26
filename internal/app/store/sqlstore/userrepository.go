@@ -1,6 +1,10 @@
 package sqlstore
 
-import "github.com/pvelp/http-rest-api-template/internal/app/model"
+import (
+	"database/sql"
+	"github.com/pvelp/http-rest-api-template/internal/app/model"
+	"github.com/pvelp/http-rest-api-template/internal/app/store"
+)
 
 type UserRepository struct {
 	store *Store
@@ -25,7 +29,11 @@ func (r *UserRepository) FindByCardId(cardId int) (*model.User, error) {
 		&u.Surname,
 		&u.EncryptedPassword,
 		&u.CardId,
-		&u.IsWorker); err != nil {
+		&u.IsWorker,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
 		return nil, err
 	}
 	return u, nil
