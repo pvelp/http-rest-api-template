@@ -2,21 +2,25 @@ package model
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID                int
-	Name              string
-	Surname           string
-	Password          string
-	EncryptedPassword string
-	CardId            int
-	IsWorker          bool
+	ID                int    `json:"id"`
+	Name              string `json:"name"`
+	Surname           string `json:"surname"`
+	Email             string `json:"email"`
+	Password          string `json:"password,omitempty"`
+	EncryptedPassword string `json:"-"`
+	CardId            int    `json:"cardId"`
+	IsWorker          bool   `json:"isWorker"`
 }
 
 func (u *User) Validate() error {
-	return validation.ValidateStruct(u, validation.Field(&u.Name, validation.Required, validation.Length(2, 32)))
+	return validation.ValidateStruct(u,
+		validation.Field(&u.Email, validation.Required, is.Email),
+		validation.Field(&u.Password, validation.By(requiredIf(u.EncryptedPassword == "")), validation.Length(6, 100)))
 }
 
 func (u *User) BeforeCreate() error {
@@ -25,9 +29,18 @@ func (u *User) BeforeCreate() error {
 		if err != nil {
 			return err
 		}
+
 		u.EncryptedPassword = enc
 	}
 	return nil
+}
+
+func (u *User) Sanitize() {
+	u.Password = ""
+}
+
+func (u *User) ComparePassword(password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(u.EncryptedPassword), []byte(password)) == nil
 }
 
 func encryptString(s string) (string, error) {
