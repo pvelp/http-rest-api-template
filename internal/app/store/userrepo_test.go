@@ -11,12 +11,24 @@ func TestUserRepo_Create(t *testing.T) {
 	s, teardown := store.TestStore(t, dbUrl)
 	defer teardown("users")
 
-	u, err := s.User().Create(&model.User{
-		Name:     "Nikolay",
-		Surname:  "Krapivyansky",
-		CardId:   0x134a,
-		IsWorker: false,
-	})
+	u, err := s.User().Create(model.TestUser(t))
+	assert.NoError(t, err)
+	assert.NotNil(t, u)
+}
+
+func TestUserRepo_FindByCardId(t *testing.T) {
+	s, teardown := store.TestStore(t, dbUrl)
+	defer teardown("users")
+
+	cardId := 0x123f
+	_, err := s.User().FindByCardId(cardId)
+	assert.Error(t, err)
+
+	u := model.TestUser(t)
+	u.CardId = cardId
+	s.User().Create(u)
+
+	u, err = s.User().FindByCardId(cardId)
 	assert.NoError(t, err)
 	assert.NotNil(t, u)
 }
